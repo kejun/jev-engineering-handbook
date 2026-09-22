@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ⅺ·Ⅻ · 局限、开放问题与实用路线 · Jev 工程中文手册</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="page">
+  <div class="running-head">
+    <span>2026 Jev 工程实践工作手册 · 第十一 / 十二章</span>
+    <span>第 12 页 / 共 12 页 · <a href="index.html">返回目录</a></span>
+  </div>
+
+  <div class="chapter-head">
+    <div class="sec-no">SECTION Ⅺ</div>
+    <h1>局限与开放问题</h1>
+    <div class="h1-en">Limits and Open Problems</div>
+    <span class="kicker">Limits and Open Problems · 局限与开放问题</span>
+  </div>
+
+  <div class="trans-note">原版式注：双栏页，阅读顺序为左栏 → 右栏。右栏含第Ⅻ章「实用前进路线」与结语。</div>
+
+  <h2><span class="letter">A.</span>已知的局限<span class="en">Known Limits</span></h2>
+  <p>类型化语义决策<strong>减少</strong>模型错误，但不消除它。契约让失败模式显式、可度量，但分布仍是预测——一个工程良好的执行框架，在全新输入上依然可能自信地出错。</p>
+  <p>Jev 工程不会让模型本身变得更诚实或更安全。它做到的是：让不确定性可读、把它路由给合适的处理者、记录发生过什么以便系统改进。</p>
+  <p>这套纪律也有成本：契约设计、fixture 维护、校准基础设施。对低风险的一次性任务，直接提示就够了。本手册的方法在决策<strong>重复发生、有后果、被审计</strong>时才回本。</p>
+
+  <h2><span class="letter">B.</span>漂移下的校准<span class="en">Calibration Under Drift</span></h2>
+  <p>校准曲线以工作负载为条件。用户群会迁移、对抗者会适应、来源文档的含义会变化。一个季度校准良好的契约，下个季度可能在没有任何代码变更的情况下变得过度自信。</p>
+  <p>持续再校准需要标注，标注需要人的注意力。开放问题是：系统能多便宜地维持可信校准——一致性信号、工具结果、用户改判这些自监督信号，能在多大程度上替代黄金标注。</p>
+
+  <h2><span class="letter">C.</span>状态的语义耦合<span class="en">Semantic Coupling of State</span></h2>
+  <p>状态包由代码构建，但内容常是语义的：摘要、抽取的论断、转述的证据。上游抽取的错误会以「事实」的身份传进下游决策。</p>
+  <p>来源元数据有帮助——带出处的「事实」可以重新核验——但在长智能体运行中做完整的溯源跟踪仍是重工程。多少溯源才算够，是个开放问题。</p>
+
+  <h2><span class="letter">D.</span>评估的局限<span class="en">Limits of Evaluation</span></h2>
+  <p>黄金集编码的是我们<strong>已经知道要问</strong>的东西。对抗性措辞、新选项组合、跨语言边界情况总是先出现在生产环境。影子流量有帮助，但罕见的高后果分支按定义就采样稀薄。</p>
+  <p>契约之间的对比（v3 vs v4）是直截了当的；系统之间的对比（不同框架、不同模型族）缺乏标准指标。这个领域需要的是「决策质量」的共享评估协议，而不只是「答案正确率」。</p>
+
+  <h2><span class="letter">E.</span>开放问题<span class="en">Open Problems</span></h2>
+  <p>契约能否从回执与改判日志中<strong>自动合成或修复</strong>？早期工具已能提议 schema 修改，但语义评审仍需要人类判断——这是一个该领域尚未解决的无穷回归。</p>
+  <p>类型化决策能否<strong>组合</strong>？Choice → Noul → Choice 的流水线有逐节点保证，但整条路径的置信度语义尚未被很好理解。校准语义决策的组合规则，仍是一片开放的研究区域。</p>
+
+  <div class="chapter-head" style="margin-top:36px;">
+    <div class="sec-no">SECTION Ⅻ</div>
+    <h1>实用前进路线</h1>
+    <div class="h1-en">A Practical Path Forward</div>
+    <span class="kicker">A Practical Path Forward · 实用前进路线</span>
+  </div>
+
+  <p>从<strong>一个重复发生、有后果的决策</strong>开始。写下契约：带可操作定义的状态字段、可区分且带逃逸出口的选项、后果等级、阈值、允许动作。第一天就版本化。</p>
+  <p>在加自动化之前先加回执。影子模式跑到有足够流量估计校准为止。只自动化「低后果 × 高置信」的分支。保持改进回路：每次人工改判都变成一个 fixture。</p>
+  <p>按模式扩展：分诊用 router-only，多步工作用 planner/executor，只有当切片被证明不相交时才上 swarm。每次扩展都是一次发布——带黄金集、金丝雀与回滚条件。</p>
+
+  <div class="code-wrap">
+    <div class="code-head">代码 12-1 · 五步落地路径（原文保留英文）</div>
+    <pre class="code">contract → shadow → calibrate → automate → audit</pre>
+    <div class="caption">写契约 → 影子运行 → 校准 → 自动化 → 审计，然后循环。</div>
+  </div>
+
+  <h2><span class="letter">F.</span>结语<span class="en">Closing</span></h2>
+  <p>模型会持续变强，原始能力会以让老手也意外的方式跃迁。但系统的可靠性从来不只是模型能力的乘积——它是模型周围那层工程的乘积。</p>
+  <p>类型化语义决策给了这层工程一个持久的表面：<strong>可评审的契约、可版本化的状态、可校准的置信度、可审计的回执、可测试的恢复。</strong>把这个表面建好，换模型就是一次实验，而不是一次重写。这就是 Jev 工程的实用承诺：不是永不失败的模型，而是以清晰、可度量、从容的方式处理失败的系统。</p>
+
+  <div class="pager">
+    <a href="page11.html"><span class="dir">← 上一页</span>Ⅹ · 案例研究</a>
+    <a class="next" href="index.html"><span class="dir">回到</span>目录首页</a>
+  </div>
+</div>
+<script src="nav.js"></script>
+</body>
+</html>

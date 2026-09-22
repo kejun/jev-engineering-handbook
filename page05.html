@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ⅳ · 状态包与证据 · Jev 工程中文手册</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="page">
+  <div class="running-head">
+    <span>2026 Jev 工程实践工作手册 · 第四章</span>
+    <span>第 5 页 / 共 12 页 · <a href="index.html">返回目录</a></span>
+  </div>
+
+  <div class="chapter-head">
+    <div class="sec-no">SECTION Ⅳ</div>
+    <h1>状态包与证据</h1>
+    <div class="h1-en">State Packets and Evidence</div>
+    <span class="kicker">State Engineering · 状态工程</span>
+  </div>
+
+  <div class="trans-note">原版式注：双栏页，阅读顺序为左栏 → 右栏；章节字母按栏编号，本页出现两个 C 节，保留原编号。</div>
+
+  <h2><span class="letter">A.</span>状态工程<span class="en">State Engineering</span></h2>
+  <p>Jev 只能判断它收到的状态。把一份巨大的对话转录丢过去，等于强迫模型从混杂的指令、陈旧的尝试、既有结论和无关历史中重建工作流。输出可能仍然满足声明的类型，但底层判断建立在过期或误导性的上下文之上。</p>
+  <p><strong>状态包</strong>（state packet）应当紧凑、新鲜、基于证据。把目标、事实、产物、证据、约束、选项与状态版本分开。每个字段功能各异；这种分离让遗漏变得可见，也防止上一个智能体的解读变成不容置疑的事实。</p>
+
+  <div class="tbl-wrap">
+    <table class="paper">
+      <thead><tr><th>状态字段</th><th>功能</th></tr></thead>
+      <tbody>
+        <tr><td><b>目标</b> Goal</td><td>定义当前任务的成功标准</td></tr>
+        <tr><td><b>事实</b> Facts</td><td>记录系统当前所知</td></tr>
+        <tr><td><b>产物</b> Artifacts</td><td>列出已存在的输出</td></tr>
+        <tr><td><b>证据</b> Evidence</td><td>支撑下一次语义判断</td></tr>
+        <tr><td><b>约束</b> Constraints</td><td>定义系统不得越过的边界</td></tr>
+        <tr><td><b>选项</b> Options</td><td>枚举当前可能发生的事</td></tr>
+        <tr><td><b>版本</b> Version</td><td>标识被评估的确切快照</td></tr>
+      </tbody>
+    </table>
+    <div class="caption"><b>表 Ⅳ</b>　功能化的状态字段可减少证据与解读之间的意外耦合。<br><span style="color:var(--ink-faint);font-size:11px;">Table IV. Functional state fields reduce accidental coupling between evidence and interpretation.</span></div>
+  </div>
+
+  <h2><span class="letter">B.</span>证据，而非继承的信心<span class="en">Evidence, Not Inherited Confidence</span></h2>
+  <p>状态里应当是<strong>可观测的证据</strong>，而不是结论。「研究大概足够了」是在要求 Jev 信任一个早先的判断；「已收集 7 个来源，其中 3 个官方来源，定价已核实，安全声明未解决」给模型的才是可判断的材料。</p>
+
+  <div class="code-wrap">
+    <div class="code-head">代码 5-1 · 继承信心 vs 呈现证据（原文保留英文）</div>
+    <pre class="code"><span class="kw">BAD</span>:     <span class="st">"research is probably enough"</span>
+<span class="fn">BETTER</span>:  <span class="st">"7 sources, 3 official, pricing verified,</span>
+<span class="st">          security claim unresolved"</span></pre>
+    <div class="caption">BAD 要求 Jev 信任别人的结论；BETTER 给出可被判断的原始证据。</div>
+  </div>
+
+  <h2><span class="letter">C.</span>状态访问控制<span class="en">State Access Control</span></h2>
+  <p>紧凑的状态包还应执行<strong>最小权限</strong>。决策模型只接收契约所需的字段。机密、个人信息、专有代码与无关的账户数据，不应仅仅因为它们存在于父智能体上下文中就被塞进来。</p>
+  <p>字段级访问规则让这个边界可评审，也让同一份底层运行状态可以分别为路由、检索、校验与审批契约产生不同的<strong>投影</strong>（projection）。</p>
+
+  <h2><span class="letter">C.</span>一个紧凑的状态包<span class="en">A Compact State Packet</span></h2>
+
+  <div class="code-wrap">
+    <div class="code-head">代码 5-2 · 状态包的功能字段（原文保留英文）</div>
+    <pre class="code">state = {
+  <span class="fn">goal</span>, <span class="fn">facts</span>, <span class="fn">artifacts</span>,
+  <span class="fn">evidence</span>, <span class="fn">constraints</span>,
+  <span class="fn">options</span>, <span class="fn">version</span>
+}</pre>
+    <div class="caption">目标、事实、产物、证据、约束、选项、版本——七个功能字段构成最小状态包。</div>
+  </div>
+
+  <p>状态包不需要包含运行中的每一个事件，它只需要包含<strong>声明问题所需的证据</strong>。不同的决策族可以接收同一份底层状态的不同投影。</p>
+
+  <h2><span class="letter">D.</span>新鲜度与失效<span class="en">Freshness and Invalidation</span></h2>
+  <p>每个选项集都有失效条件：工作器变得不可用、按钮消失、预算变化、文件移动、权限被收回、来源被更新。<strong>基于过期状态的决策不只是弱推断，而是在一张无效图上的推断。</strong></p>
+  <p>给可能过期的证据附上时间戳或版本号；评估前重建实时选项；当一致性重要时，阻止快照创建与决策评估之间的写入。如果系统要重试，就要求新证据或修改过的契约——对着同一份状态重复同一个不确定的问题，不是学习。</p>
+
+  <h2><span class="letter">E.</span>状态最小化<span class="en">State Minimization</span></h2>
+  <p>最小化不是激进删除，而是一份<strong>相关性声明</strong>。代码可以预先过滤精确不匹配项、检索可能的证据、构造一个小包；Jev 再解决剩余的语义模糊。这种分工防止模型去「重新发现」程序已经精确知道的事实。</p>
+  <p>状态包应当是人类可检查的。如果开发者说不清某个字段为什么在里面，这个状态多半吸收了转录历史，而不是决策证据。</p>
+
+  <h2><span class="letter">F.</span>测试状态包<span class="en">Testing State Packets</span></h2>
+  <p>状态测试应当对单个字段做移除、损坏与置旧，度量哪些证据真正驱动了分支。如果无关历史改变了答案，说明包的隔离不够；如果移除一个「理应必需」的字段毫无影响，要么该字段多余，要么契约没有可靠地使用它。</p>
+  <p>为常见状态版本与边界情况维护 fixture。fixture 应包含期望路由和一段简短的人类理由，而不是思维链轨迹。目标是验证<strong>决策边界</strong>与<strong>证据充分性</strong>。</p>
+
+  <div class="pager">
+    <a href="page04.html"><span class="dir">← 上一页</span>Ⅲ · 决策契约即代码</a>
+    <a class="next" href="page06.html"><span class="dir">下一页 →</span>Ⅴ · 置信度、后果与校准</a>
+  </div>
+</div>
+<script src="nav.js"></script>
+</body>
+</html>

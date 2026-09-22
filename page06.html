@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ⅴ · 置信度、后果与校准 · Jev 工程中文手册</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="page">
+  <div class="running-head">
+    <span>2026 Jev 工程实践工作手册 · 第五章</span>
+    <span>第 6 页 / 共 12 页 · <a href="index.html">返回目录</a></span>
+  </div>
+
+  <div class="chapter-head">
+    <div class="sec-no">SECTION Ⅴ</div>
+    <h1>置信度、后果与校准</h1>
+    <div class="h1-en">Confidence, Consequence, and Calibration</div>
+    <span class="kicker">Confidence and Calibration · 置信与校准</span>
+  </div>
+
+  <div class="trans-note">原版式注：双栏页，阅读顺序为左栏 → 右栏；章节字母按栏编号，本页出现两个 C 节，保留原编号。图 2 已按原 PDF 矢量图重绘为 SVG。</div>
+
+  <h2><span class="letter">A.</span>置信度是路由信号<span class="en">Confidence Is a Routing Signal</span></h2>
+  <p>多数系统太早把概率压扁成标签。0.51 与 0.99 的结果可能都变成「是」，尽管它们不该拥有同等的权威。<strong>分布应当改变执行框架接下来做什么。</strong></p>
+  <p>有用的策略有三个运行区间：高置信度加低后果，可以自动执行声明的分支；中置信度应当去改进状态——收集证据、运行确定性检查、收窄选项，或咨询更强的模型；低置信度或高后果，应当升级。</p>
+
+  <div class="tbl-wrap">
+    <table class="paper">
+      <thead><tr><th>后果</th><th>置信度</th><th>路由</th></tr></thead>
+      <tbody>
+        <tr><td>低</td><td class="num">≥ 0.90</td><td>自动执行声明分支</td></tr>
+        <tr><td>低或中</td><td class="num">0.70 – 0.89</td><td>收集证据或运行检查</td></tr>
+        <tr><td>任意</td><td class="num">&lt; 0.70</td><td>人工审查</td></tr>
+        <tr><td>不可逆</td><td class="num">任意</td><td>人工审查</td></tr>
+      </tbody>
+    </table>
+    <div class="caption"><b>表 Ⅴ</b>　阈值仅为示例，必须按动作类别分别校准。<br><span style="color:var(--ink-faint);font-size:11px;">Table V. Thresholds are illustrative and must be calibrated per action class.</span></div>
+  </div>
+
+  <p>同一个置信度不应同时控制内部队列与公开声明。<strong>阈值属于后果等级</strong>，而不仅仅属于输出类型。不可逆动作可以在任何置信度下都保持审查门禁。</p>
+
+  <h2><span class="letter">B.</span>改进状态<span class="en">Improving the State</span></h2>
+  <p>中置信度路由应当说明状态将如何改进：再取一个来源、核实一个文件、运行一次权限检查、向用户提出一个精确的问题，或收窄选项集。<strong>不改变下一步动作的置信度只是装饰。</strong></p>
+  <p>在证据不变的情况下反复评估，会制造虚假安心——几个相似的输出看起来像共识。重试预算应当用来<strong>购买信息</strong>，而不是对同一份不确定性再采样一次。</p>
+
+  <h2><span class="letter">C.</span>阈值治理<span class="en">Threshold Governance</span></h2>
+  <p>阈值是生产配置。记录它的负责人、依据、评估窗口、后果等级与回滚条件。一个从小演示集里选出来的阈值，绝不应悄悄变成永久策略。</p>
+  <p>监控每个阈值附近落了多少流量。大量流量紧贴自动化边界上方，会让系统对微小的校准漂移极其敏感。这种情况下，应先改进契约或放宽审查区间，再谈提高自主性。</p>
+
+  <h2><span class="letter">C.</span>校准<span class="en">Calibration</span></h2>
+  <p>校准问的是：被预测为某个概率的事件，在目标工作负载上是否大致以该频率发生。<strong>可靠性图</strong>（reliability diagram）把决策按置信度分箱，比较预测置信度与实测正确率。完美校准落在对角线上；曲线在对角线下方表示过度自信，上方表示自信不足。自动化能否成立，取决于更高的置信度是否真的识别出更安全的样本。</p>
+
+  <figure>
+    <svg viewBox="0 0 560 400" width="560" role="img" aria-label="图2 可靠性图">
+      <!-- 坐标区 -->
+      <rect x="70" y="30" width="300" height="300" fill="#fdfcf9" stroke="#d9d5cc"/>
+      <!-- 网格 -->
+      <g stroke="#eae7e0" stroke-width="1">
+        <line x1="145" y1="30" x2="145" y2="330"/><line x1="220" y1="30" x2="220" y2="330"/>
+        <line x1="295" y1="30" x2="295" y2="330"/>
+        <line x1="70" y1="105" x2="370" y2="105"/><line x1="70" y1="180" x2="370" y2="180"/>
+        <line x1="70" y1="255" x2="370" y2="255"/>
+      </g>
+      <!-- 理想对角线（虚线） -->
+      <line x1="70" y1="330" x2="370" y2="30" stroke="#1a1a1a" stroke-width="1.4" stroke-dasharray="6 4"/>
+      <!-- 过度自信曲线（对角线下方） -->
+      <path d="M70,330 C150,327 255,300 370,150" fill="none" stroke="#8b1a1a" stroke-width="2.4"/>
+      <!-- 自信不足曲线（对角线上方） -->
+      <path d="M70,330 C105,205 190,85 370,30" fill="none" stroke="#2b4a7a" stroke-width="2.4"/>
+      <!-- 坐标轴 -->
+      <line x1="70" y1="330" x2="370" y2="330" stroke="#1a1a1a" stroke-width="1.6"/>
+      <line x1="70" y1="330" x2="70" y2="30" stroke="#1a1a1a" stroke-width="1.6"/>
+      <text x="70" y="352" text-anchor="middle" font-family="Noto Sans SC" font-size="11" fill="#555">0</text>
+      <text x="370" y="352" text-anchor="middle" font-family="Noto Sans SC" font-size="11" fill="#555">1</text>
+      <text x="58" y="334" text-anchor="middle" font-family="Noto Sans SC" font-size="11" fill="#555">0</text>
+      <text x="58" y="38" text-anchor="middle" font-family="Noto Sans SC" font-size="11" fill="#555">1</text>
+      <text x="220" y="378" text-anchor="middle" font-family="Noto Sans SC" font-size="12.5" fill="#1a1a1a">预测置信度 PREDICTED CONFIDENCE</text>
+      <text x="24" y="180" text-anchor="middle" font-family="Noto Sans SC" font-size="12.5" fill="#1a1a1a" transform="rotate(-90 24 180)">准确率 ACCURACY</text>
+      <!-- 图例 -->
+      <g font-family="Noto Sans SC" font-size="12">
+        <line x1="392" y1="80" x2="422" y2="80" stroke="#1a1a1a" stroke-width="1.4" stroke-dasharray="6 4"/>
+        <text x="430" y="84" fill="#444">理想校准</text>
+        <line x1="392" y1="112" x2="422" y2="112" stroke="#8b1a1a" stroke-width="2.4"/>
+        <text x="430" y="116" fill="#444">过度自信</text>
+        <line x1="392" y1="144" x2="422" y2="144" stroke="#2b4a7a" stroke-width="2.4"/>
+        <text x="430" y="148" fill="#444">自信不足</text>
+      </g>
+    </svg>
+    <figcaption><b>图 2</b>　可靠性要在带标注的工作负载数据上评估，而不是从自信的措辞里推断。<span class="en">Fig. 2. Reliability is evaluated on labeled workload data, not inferred from confident language.</span></figcaption>
+  </figure>
+
+  <h2><span class="letter">D.</span>校准指标<span class="en">Calibration Metrics</span></h2>
+  <p>对二元 Noul 决策，<strong>Brier 分数</strong>度量概率与结果之间的平方误差。对 Choice，top-label 或按类别（classwise）的校准可以暴露那些系统性过度或不足自信的罕见选项。按契约版本、后果等级、语言与罕见选项切分指标——全局平均值可能恰好藏住最重要的那条分支。</p>
+
+  <h2><span class="letter">E.</span>置信度不是权限<span class="en">Confidence Is Not Authority</span></h2>
+  <p>即使校准良好的分布也仍然只是预测。策略、预算、允许清单、用户审批与确定性检查依然在下游。<strong>校准让自动化变得可度量；它不会把权限转移给模型。</strong></p>
+
+  <h2><span class="letter">F.</span>校准的上线方式<span class="en">Calibration Rollout</span></h2>
+  <p>校准应当先在影子模式中估计，自动化之后再复查，并在契约或状态 schema 发生重大变更后重新计算。置信度以工作负载为条件——把同一个契约迁移到新语言、新产品域或新用户群，可能让之前的曲线作废。</p>
+  <p>有选择但一致地使用人工标注：对罕见、高后果与贴近阈值的样本过采样。只用随机样本，可能得到一个令人安心的总体指标，却让自动化边界处于测量不足的状态。</p>
+
+  <div class="pager">
+    <a href="page05.html"><span class="dir">← 上一页</span>Ⅳ · 状态包与证据</a>
+    <a class="next" href="page07.html"><span class="dir">下一页 →</span>Ⅵ · 并行问题与状态边界</a>
+  </div>
+</div>
+<script src="nav.js"></script>
+</body>
+</html>

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ⅹ · 案例研究 · Jev 工程中文手册</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="page">
+  <div class="running-head">
+    <span>2026 Jev 工程实践工作手册 · 第十章</span>
+    <span>第 11 页 / 共 12 页 · <a href="index.html">返回目录</a></span>
+  </div>
+
+  <div class="chapter-head">
+    <div class="sec-no">SECTION Ⅹ</div>
+    <h1>案例研究</h1>
+    <div class="h1-en">Case Studies</div>
+    <span class="kicker">Case Studies · 案例研究</span>
+  </div>
+
+  <div class="trans-note">原版式注：双栏页，阅读顺序为左栏 → 右栏，章节字母按栏编号。</div>
+
+  <h2><span class="letter">A.</span>案例一：客服工单路由器<span class="en">Case 1: Customer Support Router</span></h2>
+  <p>一个客服团队每天收到数千条多语言工单。旧系统靠关键词匹配加一个分类模型，再用硬编码规则分配队列；含糊或混合意图的工单在队列之间来回弹跳。</p>
+  <p>团队改用一份路由契约：状态 = 主题、脱敏正文、客户等级、历史解决记录；选项 = 账单、技术、账户访问、功能请求、以上都不是；后果 = 仅内部路由，无客户可见动作。置信度阈值把中等样本送入一个廉价的追问（「是账单还是账户访问？」）而非人工；只有「以上都不是」或高价值客户才升级。结果：弹跳减少，且每个路由决策都可以通过回执审计。</p>
+
+  <div class="code-wrap">
+    <div class="code-head">代码 11-1 · 路由契约（原文保留英文）</div>
+    <pre class="code">router<span class="kw">@4</span> + consequence: internal-routing</pre>
+    <div class="caption">路由契约第 4 版，后果等级为「仅内部路由」。</div>
+  </div>
+
+  <h2><span class="letter">B.</span>案例二：研究证据核查<span class="en">Case 2: Research Evidence Check</span></h2>
+  <p>一个研究助手智能体收集来源并起草答案。在内部发布前，执行框架发起一个 Noul 问题：「草稿的核心论断有充分证据支撑吗？」状态：论断、带日期的来源清单、哪些来源是官方的、哪些论断仍未解决。</p>
+  <p>二元答案带校准概率。低于阈值时，框架运行改进回路：再取一个来源，或把论断降级为「暂定」。<strong>证据核查不编辑草稿，它只做路由。</strong></p>
+  <p>重点在于：Noul 问题看到的是证据字段，不是完整转录。研究员智能体自己的信心，不会作为「继承的确定性」流进来。</p>
+
+  <div class="code-wrap">
+    <div class="code-head">代码 11-2 · 二元决策契约（原文保留英文）</div>
+    <pre class="code">noul<span class="kw">@2</span> — <span class="st">"central claim supported by evidence?"</span></pre>
+    <div class="caption">二元决策契约第 2 版：「核心论断是否有证据支撑？」</div>
+  </div>
+
+  <h2><span class="letter">C.</span>案例三：数据库迁移助手<span class="en">Case 3: Migration Assistant</span></h2>
+  <p>一个数据库迁移助手要对数百个文件逐一判断：自动转换是否安全。纯语义分类逐文件太贵；纯启发式规则又会漏掉边界情况。</p>
+  <p>混合方案先扇出确定性检查（语法解析、依赖图），只把含糊文件送进 Choice 问题：自动转换、转换后复审，或人工重写。状态切片 = 文件 AST 摘要 + 依赖边；选项是<strong>活的</strong>——已迁移的文件被排除在外。</p>
+  <p>回执逐文件记录：哪个契约版本看过哪个切片。六个月后新模型上线，团队在黄金 fixture 上重放回执，只切换「含糊文件」那一条分支。</p>
+
+  <div class="code-wrap">
+    <div class="code-head">代码 11-3 · 计划契约（原文保留英文）</div>
+    <pre class="code">plan<span class="kw">@3</span> — per-file disposition</pre>
+    <div class="caption">计划契约第 3 版：逐文件处置。</div>
+  </div>
+
+  <h2><span class="letter">D.</span>案例四：内容发布门禁<span class="en">Case 4: Content Publishing Gate</span></h2>
+  <p>一个公众号用智能体起草文章。发布前，门禁契约运行：「这篇草稿可以安全发布吗？」附可操作定义——每个论断有来源、无凭据泄露、无用户身份识别、不超出声明范围的 legal/medical 建议。</p>
+  <p>后果是不可逆的（公开），因此策略要求人工审批，<strong>与置信度无关</strong>。模型分布只用来给审查队列排序，绝不用来跳过审查。</p>
+  <p>几个月的改判日志显示：审查者几乎从不拦截高置信「安全」草稿。团队讨论过自动化……然后否决了：公开后果保持人工门禁。<strong>校准换来的是更短的审查，而不是取消审查。</strong></p>
+
+  <div class="code-wrap">
+    <div class="code-head">代码 11-4 · 门禁契约（原文保留英文）</div>
+    <pre class="code">gate<span class="kw">@1</span> — irreversible, human approval required</pre>
+    <div class="caption">门禁契约第 1 版：不可逆动作，必须人工审批。</div>
+  </div>
+
+  <div class="pager">
+    <a href="page10.html"><span class="dir">← 上一页</span>Ⅸ · 评估与生产运维</a>
+    <a class="next" href="page12.html"><span class="dir">下一页 →</span>Ⅺ/Ⅻ · 局限、开放问题与实用路线</a>
+  </div>
+</div>
+<script src="nav.js"></script>
+</body>
+</html>

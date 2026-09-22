@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>封面 · 面向生产智能体的 Jev 工程</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="page">
+  <div class="running-head">
+    <span>2026 Jev 工程实践工作手册</span>
+    <span>September 2026 · <a href="index.html">返回目录</a></span>
+  </div>
+
+  <div class="paper-cover">
+    <div class="title-en">JEV ENGINEERING<br>FOR PRODUCTION AGENTS</div>
+    <div class="title-zh">面向生产智能体的 Jev 工程</div>
+    <div class="subtitle">类型化语义决策实践手册</div>
+    <div class="companion">《Jev 工程：别再让 LLM 做每一个决策》（Jev Engineering: Stop Using LLMs for Every Decision）配套手册</div>
+    <div class="disclaimer">独立学习版。与 TypeSafe AI 无从属关系，亦未获其背书。</div>
+
+    <!-- 图 1：按原 PDF 矢量数据重绘（四个圆角盒 + 箭头流水线） -->
+    <figure>
+      <svg viewBox="0 0 560 120" width="560" role="img" aria-label="图1 决策四角色">
+        <defs>
+          <marker id="arr" markerWidth="8" markerHeight="8" refX="6.5" refY="3" orient="auto">
+            <path d="M0,0 L7,3 L0,6 Z" fill="#1a1a1a"/>
+          </marker>
+        </defs>
+        <!-- STATE -->
+        <rect x="8" y="20" width="112" height="66" rx="10" fill="#fff" stroke="#111" stroke-width="1.1"/>
+        <text x="64" y="48" text-anchor="middle" font-family="Noto Sans SC, sans-serif" font-weight="700" font-size="14" fill="#111">状态 STATE</text>
+        <text x="64" y="68" text-anchor="middle" font-family="Noto Sans SC, sans-serif" font-size="10.5" fill="#555">事实 + 证据</text>
+        <!-- LLM -->
+        <rect x="152" y="20" width="112" height="66" rx="10" fill="#fff" stroke="#111" stroke-width="1.1"/>
+        <text x="208" y="48" text-anchor="middle" font-family="Noto Sans SC, sans-serif" font-weight="700" font-size="14" fill="#111">LLM</text>
+        <text x="208" y="68" text-anchor="middle" font-family="Noto Sans SC, sans-serif" font-size="10.5" fill="#555">生成工作</text>
+        <!-- JEV -->
+        <rect x="296" y="20" width="112" height="66" rx="10" fill="#fdf4f4" stroke="#8b1a1a" stroke-width="1.6"/>
+        <text x="352" y="48" text-anchor="middle" font-family="Noto Sans SC, sans-serif" font-weight="700" font-size="14" fill="#8b1a1a">JEV</text>
+        <text x="352" y="68" text-anchor="middle" font-family="Noto Sans SC, sans-serif" font-size="10.5" fill="#555">类型化判断</text>
+        <!-- CODE -->
+        <rect x="440" y="20" width="112" height="66" rx="10" fill="#fff" stroke="#111" stroke-width="1.1"/>
+        <text x="496" y="48" text-anchor="middle" font-family="Noto Sans SC, sans-serif" font-weight="700" font-size="14" fill="#111">代码 CODE</text>
+        <text x="496" y="68" text-anchor="middle" font-family="Noto Sans SC, sans-serif" font-size="10.5" fill="#555">执行策略</text>
+        <!-- 箭头 -->
+        <line x1="122" y1="53" x2="148" y2="53" stroke="#111" stroke-width="1.1" marker-end="url(#arr)"/>
+        <line x1="266" y1="53" x2="292" y2="53" stroke="#111" stroke-width="1.1" marker-end="url(#arr)"/>
+        <line x1="410" y1="53" x2="436" y2="53" stroke="#111" stroke-width="1.1" marker-end="url(#arr)"/>
+        <text x="280" y="108" text-anchor="middle" font-family="Noto Sans SC, sans-serif" font-size="9.5" fill="#888">生成 → 语义判断 → 权限执行：三条独立的职责链</text>
+      </svg>
+      <figcaption><b>图 1</b>　生成、语义判断与授权是三种彼此分离的职责。<span class="en">Fig. 1. Generation, semantic judgment, and authority are separate responsibilities.</span></figcaption>
+    </figure>
+  </div>
+
+  <div class="abstract-box">
+    <div class="ab-label">摘　要 ABSTRACT</div>
+    <div class="cols">
+      <div>
+        <p>Jev 是一个<b>决策模型</b>（decision model），而不是会话模型。它接收结构化状态与类型化问题，返回受约束的答案及概率分布。这种接口之所以对智能体内部有用，是因为许多昂贵的调用并不需要新的语言——它们需要的是一个路由、一个评分、一个是/否的概率估计，或者一个「是否升级」的决定。生成式模型继续负责开放式工作；确定性代码继续负责精确不变式与外部权限。</p>
+        <p>本手册将这一分工发展为一门工程学科。其核心单元是<b>决策契约</b>（decision contract）：对状态、指令、声明式结果、回退方案、阈值、允许动作与升级行为的版本化规约。契约把一次隐藏的判断，变成可评估、可记录、可审查、可回滚的生产逻辑。</p>
+      </div>
+      <div>
+        <p>全书的写法刻意偏重实操。内容涵盖：Choice、Score 与 Noul 三种原语；紧凑证据包；置信度感知路由；基于同一状态快照的并行评估；动态选项菜单；执行框架（harness）插入点；影子模式评估；校准；决策回执；以及那些常被误诊为「模型缺陷」的失败模式。目标不是最大化 Jev 的使用量，而是把生成式调用从那些从来不需要「一句话」的决策中移除。</p>
+        <p>TypeSafe 报告 Jev 形态查询的端到端延迟约为 70–500 毫秒，价格为每百万输入 token 0.042 美元，且不计输出 token 费用。其更广泛的「20–200 倍速度、40–400 倍成本」论断来自对己有利的工作流评估。这些数字应读作<b>随工作负载而变的性能上限</b>，而非对每次集成的承诺。类型化判断的架构价值，并不取决于是否达到宣传的最大值。</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="index-terms">
+    <div class="lbl">索引术语 INDEX TERMS</div>
+    <div class="terms">
+      <span>Jev</span><span>TypeSafe AI</span><span>系统一模型 system one model</span><span>决策契约 decision contract</span><span>类型化判断 typed judgment</span><span>校准 calibration</span><span>置信度路由 confidence routing</span><span>智能体执行框架 agent harness</span><span>影子模式 shadow mode</span><span>语义校验 semantic verification</span><span>Choice（单选）</span><span>Score（评分）</span><span>Noul（是/否概率）</span>
+    </div>
+  </div>
+
+  <div class="pager">
+    <a href="index.html"><span class="dir">← 返回</span>目录</a>
+    <a class="next" href="page02.html"><span class="dir">下一页 →</span>Ⅰ · 为什么需要决策层</a>
+  </div>
+</div>
+<script src="nav.js"></script>
+</body>
+</html>

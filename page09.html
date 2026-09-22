@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ⅷ · 智能体与多智能体模式 · Jev 工程中文手册</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="page">
+  <div class="running-head">
+    <span>2026 Jev 工程实践工作手册 · 第八章</span>
+    <span>第 9 页 / 共 12 页 · <a href="index.html">返回目录</a></span>
+  </div>
+
+  <div class="chapter-head">
+    <div class="sec-no">SECTION Ⅷ</div>
+    <h1>智能体与多智能体模式</h1>
+    <div class="h1-en">Agents and Multi-Agent Patterns</div>
+    <span class="kicker">Contract Engineering · 契约工程</span>
+  </div>
+
+  <div class="trans-note">原版式注：双栏页，阅读顺序为左栏 → 右栏；章节字母按栏编号，本页出现两个 B 节，保留原编号。</div>
+
+  <h2><span class="letter">A.</span>智能体模式<span class="en">Agent Patterns</span></h2>
+  <p>「智能体」是个被过度使用的词。在本手册中，它指这样一种系统：接收目标、维护状态、调用工具，并反复做出语义判断，直到抵达停止条件。<strong>模式决定了谁拥有规划、谁执行、证据如何流动。</strong></p>
+  <p>没有普适的赢家。Router-only 运维成本最低；planner/executor 提供最清晰的审计轨迹；peer debate 用延迟换取覆盖度；worker swarm 在子问题真正独立时吞吐最大。</p>
+
+  <div class="tbl-wrap">
+    <table class="paper">
+      <thead><tr><th>模式</th><th>状态</th><th>最适合</th></tr></thead>
+      <tbody>
+        <tr><td>仅路由 Router-only</td><td>单一快照</td><td>分类、分诊</td></tr>
+        <tr><td>规划者/执行者 Planner/Executor</td><td>计划 + 检查点</td><td>多步、可审计的工作</td></tr>
+        <tr><td>同侪辩论 Peer Debate</td><td>共享转录</td><td>含糊、高代价的判断</td></tr>
+        <tr><td>工作器蜂群 Worker Swarm</td><td>不相交切片</td><td>可并行分解的子问题</td></tr>
+      </tbody>
+    </table>
+    <div class="caption"><b>表 Ⅷ</b>　选择模式，本质上是选择状态的所有权。<br><span style="color:var(--ink-faint);font-size:11px;">Table VIII. The pattern choice is a choice about state ownership.</span></div>
+  </div>
+
+  <p>无论选择哪种模式，都要声明状态切片、后果等级与停止条件。<strong>没有声明的模式，会以隐式耦合的形式自己长出来。</strong></p>
+
+  <h2><span class="letter">B.</span>规划者与执行者<span class="en">Planners and Executors</span></h2>
+  <p>规划者把目标转换成带前置条件与效果的类型化步骤；执行者运行步骤并报告证据。计划是可检查的，因此人或策略可以在副作用发生之前否决危险步骤。</p>
+  <p>计划应当版本化，步骤应当引用契约 ID。某步前置条件失败时，规划者从当前状态<strong>重新规划</strong>，而不是盲目重试同一序列。</p>
+  <p>规划者的置信度作用于<strong>步骤</strong>，不是整个任务。一份高置信度的计划里若含一个低置信度步骤，应当执行安全步骤，在不确定的边界处暂停。</p>
+
+  <h2><span class="letter">B.</span>规划者与执行者（续）<span class="en">Planners and Executors</span></h2>
+  <p>执行者应当近乎确定性：工具调用、校验、检查点。如果执行者开始即兴发挥语义，这个模式就悄悄退化成了「带额外延迟的 router-only 智能体」。</p>
+  <p>逐步记录回执。事故复盘才能区分<strong>规划失败</strong>与<strong>执行失败</strong>。</p>
+
+  <h2><span class="letter">C.</span>多智能体系统<span class="en">Multi-Agent Systems</span></h2>
+  <p>多智能体系统增加了协调问题。每个智能体都需要声明接口：它能回答什么问题、能碰哪些状态、产出什么。否则智能体之间会重复劳动或互相矛盾。</p>
+  <p>协调应当通过<strong>类型化消息</strong>与<strong>共享版本化状态存储</strong>进行，而不是散文式对话。自然语言交接会丢掉让并行安全成立的边界信息。</p>
+
+  <h2><span class="letter">D.</span>仅路由<span class="en">Router-Only</span></h2>
+  <p>Router-only 模式下，一个 Jev 问题从当前状态选择下一条分支。这是最简单的生产模式：一份契约、一张回执、一次策略检查。适合分诊、分类，以及状态能装进单个快照的短时程工作流。</p>
+
+  <h2><span class="letter">E.</span>同侪辩论<span class="en">Peer Debate</span></h2>
+  <p>同侪辩论让两个或多个模型在共享转录下对同一问题论辩，由一份裁判契约做选择或综合。辩论能把缺失的证据翻出来，但也可能产出<strong>自信的错误共识</strong>。</p>
+  <p>把辩论当作证据收集，不是权威。裁判看得见论据，但决策仍要过同样的阈值与后果策略。把异议记入回执——<strong>分歧本身是校准信号</strong>。</p>
+
+  <h2><span class="letter">F.</span>工作器蜂群<span class="en">Worker Swarm</span></h2>
+  <p>工作器蜂群把独立子问题扇出给多个工作器：状态切片不相交，共享一份原子化预算。任务能干净分解时它最出色——批量分类、并行检索、逐文件分析。</p>
+  <p>蜂群在子问题<strong>暗中共享状态</strong>时失败。扩大工作器数量之前，先用第Ⅵ章的并行安全测试验证切片不相交。</p>
+
+  <div class="pager">
+    <a href="page08.html"><span class="dir">← 上一页</span>Ⅶ · 执行框架设计与故障处理</a>
+    <a class="next" href="page10.html"><span class="dir">下一页 →</span>Ⅸ · 评估与生产运维</a>
+  </div>
+</div>
+<script src="nav.js"></script>
+</body>
+</html>

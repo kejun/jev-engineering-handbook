@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ⅱ · 决策原语：Choice、Score 与 Noul · Jev 工程中文手册</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="page">
+  <div class="running-head">
+    <span>2026 Jev 工程实践工作手册 · 第二章</span>
+    <span>第 3 页 / 共 12 页 · <a href="index.html">返回目录</a></span>
+  </div>
+
+  <div class="chapter-head">
+    <div class="sec-no">SECTION Ⅱ</div>
+    <h1>决策原语：Choice、Score 与 Noul</h1>
+    <div class="h1-en">Choice, Score, and Noul</div>
+    <span class="kicker">Decision Primitives · 决策原语</span>
+  </div>
+
+  <div class="trans-note">原版式注：双栏页，阅读顺序为左栏 → 右栏；章节字母按栏编号，本页出现两个 G 节，保留原编号。</div>
+
+  <h2><span class="letter">A.</span>Choice（单选）<span class="en">Choice</span></h2>
+  <p>Choice 适用于「声明选项中应恰有一个胜出」的场景。设计重点不在选项标签，而在<strong>选项描述</strong>：每个判据必须说明，什么样的证据能把该结果与相邻结果区分开。像 <code>research</code>、<code>write</code>、<code>review</code> 这样的标签方便代码处理，但描述才赋予它们含义。</p>
+  <p>只要现实中可能存在清单之外的状态，封闭菜单就需要一个<strong>逃逸出口</strong>（escape hatch）。没有 <code>none</code>、<code>other</code>、<code>stop</code> 或 <code>escalate</code>，概率质量就会被强行分配到「最不差」的选项上——结果在类型层面合法，在运行层面却可能是错的。逃逸结果保住了不确定性，也给执行框架留下一条安全路径。</p>
+  <p>Choice 适合工作器路由、模型选择、队列分派、从当前界面控件集合中挑选、选择重试策略，以及决定哪个检索候选得以幸存；它不适合发明菜单中未声明的标识符、URL、数字或名字。</p>
+
+  <div class="code-wrap">
+    <div class="code-head">伪代码 · Score 原语示例（原文保留英文）</div>
+    <pre class="code"><span class="fn">Score</span>(criteria: [
+  <span class="st">"no direct support"</span>
+  <span class="st">"partial support, important gaps"</span>
+  <span class="st">"strong support from independent sources"</span>
+]) <span class="cm">-&gt; ordered value + interpolation</span></pre>
+    <div class="caption">返回有序量表值；相邻等级之间可插值。</div>
+  </div>
+
+  <h2><span class="letter">B.</span>Score（评分）<span class="en">Score</span></h2>
+  <p>当决策处于一个有序语义量表上时，使用 Score。量表等级应当是<strong>文字描述</strong>，而不是含义模糊的数字。例如证据质量量表可以从「无直接支持」推进到「部分支持但存在重要缺口」，再到「来自多个独立来源的强支持」。</p>
+  <p>输出可以落在等级之间，但插值不会把有序量表变成精确测量。<code>1.6</code> 只是两个描述之间的一个位置——它并不自动意味着「80% 好」「1.6 倍优」，也不意味着可以跨契约直接比较。</p>
+
+  <h2><span class="letter">G.</span>量表设计<span class="en">Rubric Design</span></h2>
+  <p>量表等级应描述<strong>证据的可观测差异</strong>，而非情绪强度。相邻等级必须存在有意义的分界。如果人类评审者对样本归类都无法保持一致，就不能指望 Jev 仅凭描述学到一个稳定的次序。</p>
+  <p>三到五个区分良好的等级优于更多。等级过多会制造精确的假象，同时降低评审间一致性。把等级描述原样保留在回执（receipt）中，后续分析才能区分「模型行为变化」与「契约变化」。</p>
+
+  <h2><span class="letter">C.</span>Noul（是/否概率）<span class="en">Noul</span></h2>
+  <p>Noul 表示一个是或否的概率。接近 1 意味着「很可能是」；接近 0 意味着「很可能否」；接近 0.5 意味着现有证据不足以做出有信心的区分——它<strong>不</strong>表示「中等严重性」或「部分许可」。有序的风险类别应当使用 Score，而不是 Noul。</p>
+
+  <div class="code-wrap">
+    <div class="code-head">伪代码 · Noul 原语示例（原文保留英文）</div>
+    <pre class="code"><span class="fn">Noul</span>(
+  <span class="st">"Is this proposed action purely read-only?"</span>
+) <span class="cm">-&gt; probability near 0 or 1</span></pre>
+    <div class="caption">问：「这个拟议动作是否纯只读？」返回接近 0 或 1 的概率。</div>
+  </div>
+
+  <p>Noul 适合完成度检查、审批通过可能性、证据充分性、请求是否含糊，以及拟议动作是否存在外部副作用。应用仍须自行决定：哪些概率区间触发自动化、补充证据，或人工审查。</p>
+
+  <h2><span class="letter">D.</span>选择纪律<span class="en">Selection Discipline</span></h2>
+
+  <div class="tbl-wrap">
+    <table class="paper">
+      <thead><tr><th>答案形态</th><th>原语</th><th>设计要求</th></tr></thead>
+      <tbody>
+        <tr><td>唯一胜者</td><td><b>Choice</b></td><td>描述每个选项；加逃逸出口</td></tr>
+        <tr><td>有序质量</td><td><b>Score</b></td><td>定义文字锚点；避免虚假精度</td></tr>
+        <tr><td>是或否</td><td><b>Noul</b></td><td>解读的是不确定性，而非严重程度</td></tr>
+        <tr><td>未知自由字符串</td><td>非 Jev</td><td>使用抽取或生成</td></tr>
+        <tr><td>精确算术</td><td>非 Jev</td><td>使用确定性代码</td></tr>
+      </tbody>
+    </table>
+    <div class="caption"><b>表 Ⅱ</b>　原语选择始于声明的答案形态。<br><span style="color:var(--ink-faint);font-size:11px;">Table II. Primitive selection starts from the declared answer shape.</span></div>
+  </div>
+
+  <h2><span class="letter">E.</span>类型安全不等于正确<span class="en">Type Safety Is Not Truth</span></h2>
+  <p>Jev 保证答案符合声明的输出类型，但不保证所选的合法答案在语义上正确。错误的证据、过期的选项、含糊的判据或不完整的菜单，都可能产出一个类型层面完全合法、结果却错误的选择。</p>
+  <p>因此生产系统需要代表性样本、置信度阈值、确定性检查、决策回执与审查路径。类型安全消除了解析与 schema 故障，但不会消除对「决策含义」的测试需求。</p>
+
+  <h2><span class="letter">F.</span>原语组合<span class="en">Primitive Composition</span></h2>
+  <p>原语之间可以组合。路由器可以在同一次调用中用 Choice 问「下一个工作器」、用 Score 问「紧急度」、用 Noul 问「审批通过的可能性」——前提是它们考察<strong>同一份状态快照</strong>。若后一个问题依赖前一个答案产生的新证据，就不能在同一次请求中链式串联（见第 Ⅵ 章）。</p>
+
+  <h2><span class="letter">G.</span>原语反模式<span class="en">Primitive Anti-Patterns</span></h2>
+  <p>不要把多标签问题塞进 Choice——如果多个选项可以同时为真；不要在类别无序时使用 Score；不要把 Noul 的概率解读成严重程度量表。每一种错配都会产出看似合理、却被应用按错误语义读取的数字。</p>
+  <p>当所需输出无法干净地映射到单一原语时，拆分问题。一个风险工作流可以是：Noul 判断「是否存在外部副作用」，Score 评估「后果有多严重」，Choice 选择「允许的路由」。</p>
+
+  <div class="pager">
+    <a href="page02.html"><span class="dir">← 上一页</span>Ⅰ · 为什么需要决策层</a>
+    <a class="next" href="page04.html"><span class="dir">下一页 →</span>Ⅲ · 决策契约即代码</a>
+  </div>
+</div>
+<script src="nav.js"></script>
+</body>
+</html>

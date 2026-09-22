@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ⅸ · 评估与生产运维 · Jev 工程中文手册</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="page">
+  <div class="running-head">
+    <span>2026 Jev 工程实践工作手册 · 第九章</span>
+    <span>第 10 页 / 共 12 页 · <a href="index.html">返回目录</a></span>
+  </div>
+
+  <div class="chapter-head">
+    <div class="sec-no">SECTION Ⅸ</div>
+    <h1>评估与生产运维</h1>
+    <div class="h1-en">Evaluation and Production Operations</div>
+    <span class="kicker">Evaluation and Operations · 评估与运维</span>
+  </div>
+
+  <div class="trans-note">原版式注：双栏页，阅读顺序为左栏 → 右栏，章节字母按栏编号。</div>
+
+  <h2><span class="letter">A.</span>评估是持续过程<span class="en">Evaluation Is Continuous</span></h2>
+  <p>对 Jev 系统的评估不是上线前跑一次的基准测试。工作负载会漂移、选项会变化、模型会更新、用户会找到你没预料到的措辞。<strong>评估是绑定在回执上的运维回路。</strong></p>
+  <p>跟踪三个层次：契约在带标注 fixture 上的准确率；在实时影子流量上的校准；自动化分支的结果指标——人工改判率、事故率、用户纠正率。</p>
+  <p>层次之间的分歧会告诉你去哪儿看。fixture 准确率良好而实时校准糟糕，说明 fixture 已不再代表真实流量。</p>
+
+  <h2><span class="letter">B.</span>Fixture 与黄金集<span class="en">Fixtures and Golden Sets</span></h2>
+  <p>为每个契约版本维护<strong>黄金集</strong>：正常情况、对抗性措辞、陈旧状态、证据缺失、「以上都不是」。fixture 是不可变快照，附期望路由与理由。</p>
+  <p>从生产故障中扩充黄金集。每次事故都应在修复上线<strong>之前</strong>添加一个回归 fixture。钉不进 fixture 的修复是传说，不是工程。</p>
+
+  <div class="tbl-wrap">
+    <table class="paper">
+      <thead><tr><th>运维工件</th><th>用途</th></tr></thead>
+      <tbody>
+        <tr><td>黄金集</td><td>契约回归</td></tr>
+        <tr><td>回执存储</td><td>校准与审计</td></tr>
+        <tr><td>影子运行</td><td>部署前证据</td></tr>
+        <tr><td>金丝雀队列</td><td>限制爆炸半径</td></tr>
+        <tr><td>改判日志</td><td>标注流水线</td></tr>
+      </tbody>
+    </table>
+    <div class="caption"><b>表 Ⅸ</b>　每种工件回答一个不同的运维问题。<br><span style="color:var(--ink-faint);font-size:11px;">Table IX. Each artifact answers a different operational question.</span></div>
+  </div>
+
+  <h2><span class="letter">C.</span>影子模式与金丝雀<span class="en">Shadow Mode and Canary</span></h2>
+  <p>影子模式让新契约在实时流量上运行但<strong>不执行动作</strong>。把路由、置信度与回执同现行版本对比；只有差异可解释时才发布。</p>
+  <p>金丝雀随后给新契约一小片真实权限。按切片盯住改判率与事故率，并在上线之前——而不是事故之中——定义自动回滚条件。</p>
+
+  <h2><span class="letter">D.</span>人在回路<span class="en">Human-in-the-Loop</span></h2>
+  <p>人工审查是一条<strong>路由</strong>，不是失败。把审查队列当产品来设计：展示状态包、概率分布与那个具体的问题。看不见证据的审查者只会盖橡皮章。</p>
+  <p>把审查者的纠正捕获为标注——这是你能得到的最便宜的高质量校准数据。闭合回路：纠正进入黄金集，并触发阈值复审。</p>
+
+  <h2><span class="letter">E.</span>成本与延迟预算<span class="en">Cost and Latency Budgets</span></h2>
+  <p>每条分支都有预算：token、调用次数、墙钟时间、用户可见延迟。把预算声明在契约里，策略才能在超支前降级模型或升级人工，而不是悄悄爆掉。</p>
+  <p>度量<strong>每个已解决决策</strong>的成本，而不是每次调用的成本。一个便宜模型若带来 40% 的升级率，算上人工审查时间，可能比升级率 5% 的强模型更贵。</p>
+
+  <h2><span class="letter">F.</span>安全边界<span class="en">Security Boundaries</span></h2>
+  <p>Jev 系统继承智能体的安全面：经由证据的提示注入、经由工具的数据外渗、经由路由的权限升级。<strong>把每个状态字段都当作决策的不可信输入。</strong></p>
+  <p>机密不进状态包；工具参数做确定性校验；语义选择只能从声明的选项中挑选，永远不能合成命令。</p>
+
+  <h2><span class="letter">G.</span>运维清单<span class="en">The Operations Checklist</span></h2>
+  <p><strong>上线前</strong>：契约已版本化、按后果等级校准的阈值、黄金集、影子证据、金丝雀计划、回滚条件、预算、回执接线完毕。</p>
+  <p><strong>运行中</strong>：监控校准漂移、改判聚集、贴近阈值的流量、预算消耗；对照回执复盘事故并补 fixture。</p>
+  <p><strong>变更时</strong>：重跑黄金集、重估校准、再走金丝雀。模型、契约、阈值的每次变更都是一次发布——哪怕应用代码一行未动。</p>
+
+  <div class="pager">
+    <a href="page09.html"><span class="dir">← 上一页</span>Ⅷ · 智能体与多智能体模式</a>
+    <a class="next" href="page11.html"><span class="dir">下一页 →</span>Ⅹ · 案例研究</a>
+  </div>
+</div>
+<script src="nav.js"></script>
+</body>
+</html>

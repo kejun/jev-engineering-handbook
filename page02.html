@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ⅰ · 为什么需要决策层 · Jev 工程中文手册</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="page">
+  <div class="running-head">
+    <span>2026 Jev 工程实践工作手册 · 第一章</span>
+    <span>第 2 页 / 共 12 页 · <a href="index.html">返回目录</a></span>
+  </div>
+
+  <div class="chapter-head">
+    <div class="sec-no">SECTION Ⅰ</div>
+    <h1>为什么需要决策层</h1>
+    <div class="h1-en">Why a Decision Layer</div>
+    <span class="kicker">Decision Layer · 决策层</span>
+  </div>
+
+  <div class="trans-note">原版式注：本 PDF 页为双栏排版，正文按「左栏自上而下 → 右栏自上而下」的顺序阅读。原文章节字母按栏独立编号，故本页出现两个 G 节；译文保留原始编号与顺序。</div>
+
+  <h2><span class="letter">A.</span>昂贵的假设<span class="en">The Expensive Assumption</span></h2>
+  <p>多数智能体技术栈都默认：每一次智能判断都值得再来一次生成式调用。循环让同一个前沿模型负责撰写、分类、选择工具、估计风险、判断证据是否充分、校验结果，并决定何时停止。从外部看，这像是一个无所不能的智能体；从内部看，它是一大堆以「散文生成」方式实现的小分支。</p>
+  <p>这些分支的成本很容易被忽略，因为它很少出现在最终答案里。它表现为串行延迟、上下文的重复传输、JSON 修复、schema 重试，以及弱分支决策之后的补救。多一次调用也许可以接受；二十次相互依赖的调用则可能主导整个工作流——哪怕可见的产出物很短。</p>
+
+  <h2><span class="letter">B.</span>一种不同的原语<span class="en">A Different Primitive</span></h2>
+  <p>Jev 把原语（primitive）从「文本生成」换成「<strong>类型化语义判断</strong>」（typed semantic judgment）。调用方提供当前状态和一个或多个预定义问题；响应包含声明过的答案类型和概率分布。软件不再需要从散文中恢复决策、从语气里猜测置信度分数，或者指望一个临时拼凑的 JSON schema 在生成过程中幸存下来。</p>
+  <p>这种限制正是重点。Jev 不会起草邮件、不会撰写报告、不会产出代码补丁；但它可以决定这封邮件应进入哪个队列、这份报告的证据是否足够、这个拟议补丁在执行前是否需要人工审查。受约束的输出让这些决策可以与普通程序逻辑自由组合。</p>
+
+  <h2><span class="letter">C.</span>延迟、成本与集成<span class="en">Latency, Cost, and Integration</span></h2>
+  <p>TypeSafe 将 Jev 描述为一个以「强化学习训练、面向校准决策」的<strong>系统一模型</strong>（system one model）。它的优化目标是决策质量加上有用的不确定性，而不是漂亮的 prose。公开的服务特性——Jev 形态请求约 70–500 毫秒、每百万输入 token 0.042 美元且不计输出 token 费用——让高频语义分支成为可能。</p>
+  <p>但这些服务特性并不能替代系统设计。一个便宜却选错工作器（worker）的决策，造成的下游成本可能超过一个昂贵的正确决策；一个快速却放行不完整工作的校验器，会在后面补上延迟账单。因此，分析单位应当是「<strong>完成的任务</strong>」，而不是孤立的一次调用。</p>
+
+  <h2><span class="letter">G.</span>盘点隐藏决策<span class="en">Inventory the Hidden Decisions</span></h2>
+  <p>在接入 Jev 之前，先把智能体中已经存在的每一个语义分支写下来：请求是否清晰、工作器选择、模型选择、检索结果去留、工具风险、任务完成、重试、升级与停止。记录今天每个分支由哪个组件做出，以及该分支是在创造语言、解读语义，还是在执行一条精确规则。</p>
+  <p>这份盘点会暴露出此前埋在提示词里的决策，也防止不加区分的迁移。有些分支应当留在 LLM，因为其输出是生成式的；另一些应当移入代码，因为其条件是精确的。只有剩下的语义分支，才是 Jev 的候选。</p>
+
+  <h2><span class="letter">D.</span>智能体内部的三个归属方<span class="en">Three Owners Inside the Agent</span></h2>
+  <p>生产级智能体应当把工作分配给三个不同的归属方：生成式 LLM 创造开放式产物；Jev 在答案形态已知时解读模糊语义；确定性代码执行精确不变式。把三者混在一起，会把彼此独立的失败模式坍缩进一次不透明的模型调用。</p>
+
+  <div class="tbl-wrap">
+    <table class="paper">
+      <thead><tr><th>问题</th><th>归属</th><th>理由</th></tr></thead>
+      <tbody>
+        <tr><td>起草研究摘要</td><td>LLM</td><td>产出物本身需要被创作</td></tr>
+        <tr><td>选择下一个工作器</td><td>Jev</td><td>语义模糊；菜单已知</td></tr>
+        <tr><td>评估证据质量</td><td>Jev</td><td>量表有序且属于语义判断</td></tr>
+        <tr><td>尝试三次后停止</td><td>代码</td><td>规则是精确的</td></tr>
+        <tr><td>批准一笔支付</td><td>代码 + 人工</td><td>副作用后果重大</td></tr>
+        <tr><td>校验一份报告</td><td>Jev + 代码</td><td>既需语义量表，也需产物检查</td></tr>
+      </tbody>
+    </table>
+    <div class="caption"><b>表 Ⅰ</b>　工作负载的归属取决于输出形态与权限，而不仅仅是模型能力。<br><span style="color:var(--ink-faint);font-size:11px;">Table I. Workload ownership follows output shape and authority, not model capability alone.</span></div>
+  </div>
+
+  <h2><span class="letter">E.</span>权限留在模型之外<span class="en">Authority Remains Outside the Model</span></h2>
+  <p>置信度分数是运行信号，不是许可。Jev 可以估计某条命令风险很低，但它能否执行仍由策略引擎决定。这一区分在以下场景最为要紧：发布、购买、删除、账户访问、权限变更、数据库写入、资金转移，以及代表用户对外行事。</p>
+  <p>安全的顺序在所有集成中都是稳定的：<strong>Jev 判断；代码核查策略；工具执行；轨迹记录。</strong>颠倒这个顺序，就把概率性判断变成了无边界权限——分类器内含策略，应用代码只是服从。这种设计难以审计，扩展起来也不安全。</p>
+
+  <h2><span class="letter">F.</span>工程目标<span class="en">The Engineering Objective</span></h2>
+  <p>目标不是取代 LLM，而是停止在不需要生成的地方使用生成。每移除一次 prose 调用，图就更小、schema 更简单、决策更容易被评估。因此，Jev 工程本质上是<strong>边界设计</strong>：决定语言在哪里创造价值、类型化判断在哪里消解模糊、代码在哪里必须寸步不让。</p>
+
+  <h2><span class="letter">G.</span>一个可操作的边界测试<span class="en">An Operational Boundary Test</span></h2>
+  <p>对一个分支问三个问题。输出本身必须被创作吗？是，则用生成式模型。语义模糊而答案形态已知吗？是，则用 Jev。条件必须被精确执行吗？是，则用代码。看似三者都需要的分支，应当分解为生成、判断、执行三个步骤。</p>
+  <p>这种分解让职责在实现与轨迹两侧都可见。故障因此可以被归到产物创作、语义判断或策略执行中的某一环，而不是含糊地归咎于「智能体」。</p>
+
+  <div class="pager">
+    <a href="page01.html"><span class="dir">← 上一页</span>封面 · 摘要</a>
+    <a class="next" href="page03.html"><span class="dir">下一页 →</span>Ⅱ · Choice、Score 与 Noul</a>
+  </div>
+</div>
+<script src="nav.js"></script>
+</body>
+</html>

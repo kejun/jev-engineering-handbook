@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ⅶ · 执行框架设计与故障处理 · Jev 工程中文手册</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="page">
+  <div class="running-head">
+    <span>2026 Jev 工程实践工作手册 · 第七章</span>
+    <span>第 8 页 / 共 12 页 · <a href="index.html">返回目录</a></span>
+  </div>
+
+  <div class="chapter-head">
+    <div class="sec-no">SECTION Ⅶ</div>
+    <h1>执行框架设计与故障处理</h1>
+    <div class="h1-en">Harness Design and Failure Handling</div>
+    <span class="kicker">Contract Engineering · 契约工程</span>
+  </div>
+
+  <div class="trans-note">原版式注：双栏页，阅读顺序为左栏 → 右栏，章节字母按栏编号。</div>
+
+  <h2><span class="letter">A.</span>为什么执行框架拥有控制流<span class="en">Why the Harness Owns the Flow</span></h2>
+  <p>执行框架（harness）拥有控制流，因为模型不拥有。它构造状态包、调用类型化 API、校验输出、应用阈值、调用工具、记录回执、处理重试并决定何时停止。语义决策是这个程序的一个输入，而不是程序本身。</p>
+  <p>这种分离也改善了可靠性。决策失败时，开发者能分辨：是状态不够、契约含糊、模型不确定，还是执行器拒绝了动作。没有这些边界，一切都会塌缩成「智能体失败了」。</p>
+
+  <div class="tbl-wrap">
+    <table class="paper">
+      <thead><tr><th>故障</th><th>确定性响应</th><th>语义角色</th></tr></thead>
+      <tbody>
+        <tr><td>无效输出</td><td>修复并重试</td><td>无——类型违规</td></tr>
+        <tr><td>低置信度</td><td>改进状态或升级</td><td>可建议证据</td></tr>
+        <tr><td>工具不可用</td><td>回退或暂停</td><td>可重新选择选项</td></tr>
+        <tr><td>预算耗尽</td><td>停止并报告</td><td>不做新决策</td></tr>
+        <tr><td>副作用冲突</td><td>回滚或加围栏</td><td>可解释状态</td></tr>
+      </tbody>
+    </table>
+    <div class="caption"><b>表 Ⅶ</b>　确定性代码拥有恢复；语义只在真正需要解读时被咨询。<br><span style="color:var(--ink-faint);font-size:11px;">Table VII. Deterministic code owns recovery; semantics is consulted only when interpretation is truly needed.</span></div>
+  </div>
+
+  <h2><span class="letter">B.</span>故障的种类<span class="en">Types of Failure</span></h2>
+  <p>不是每种故障都是语义故障。解析错误意味着输出违反了声明的类型；被拒绝的工具调用是权限或可用性问题；超时可能是基础设施问题。把它们统统当成「模型错误」，会导致重试一个根本修不好的问题。</p>
+  <p>契约应当给故障分类：<strong>无效、不确定、不可用、被禁止、陈旧、冲突、耗尽</strong>。每一类映射到不同的确定性响应。</p>
+
+  <h2><span class="letter">C.</span>恢复是一个设计问题<span class="en">Recovery Is a Design Problem</span></h2>
+  <p>恢复属于执行框架，不属于临时拼凑的提示词。开发者声明一次重试<strong>可以改变什么</strong>：新证据、更窄的选项集、更强的模型、不同的契约版本，或人工审查。</p>
+  <p>用同样的状态重复同一个问题很少是恢复。如果第一次尝试不确定，系统需要的是不同的信息或不同的决策边界——而不是再采样一次。</p>
+  <p>重试有预算。每次重试都消耗 token、延迟与用户耐心。把每次尝试记入回执，校准才能区分「一次成功」与「第三次才成功」。</p>
+
+  <div class="code-wrap">
+    <div class="code-head">代码 8-1 · 重试与升级（原文保留英文）</div>
+    <pre class="code">retry<span class="kw">@2</span>  <span class="cm">narrowed options, second attempt</span>
+escalate <span class="cm">human review after budget</span></pre>
+    <div class="caption">第二次尝试收窄选项集；预算用尽后升级人工审查。</div>
+  </div>
+
+  <h2><span class="letter">D.</span>部分成功<span class="en">Partial Success</span></h2>
+  <p>复合任务经常部分成功。如果系统能证明剩余工作是独立的，它可以保留已完成的产物，只把未决的剩余部分路由去审查。</p>
+  <p>部分接受需要副作用跟踪。不知道哪些写入已提交，框架就无法安全续跑。<strong>检查点</strong>让「已完成」与「进行中」之间的边界显式化。</p>
+
+  <h2><span class="letter">E.</span>可观测性回路<span class="en">The Observability Loop</span></h2>
+  <p>回执喂给一个改进回路：按契约版本与状态切片聚合路由、置信度与结果，找出那些自动化率很高、人工改判率也高的分支。</p>
+  <p>回路是：观测回执 → 分析校准与改判 → 改进契约或状态 → 在留出 fixture 上验证 → 以阈值变更的形式灰度上线。每一步都有负责人与回滚条件。</p>
+
+  <div class="code-wrap">
+    <div class="code-head">代码 8-2 · 观测回路（原文保留英文）</div>
+    <pre class="code">observe → analyze → improve → verify</pre>
+    <div class="caption">四步观测回路：观测、分析、改进、验证。</div>
+  </div>
+
+  <h2><span class="letter">F.</span>模型升级<span class="en">Model Upgrades</span></h2>
+  <p>模型升级是<strong>契约迁移</strong>。新版本可能改变置信度的含义、选项措辞或校准。绝不要在生产阈值背后悄悄换模型。</p>
+  <p>在留出 fixture 上重跑、重新估计校准、逐切片对比行为。如果新模型在关键分支上只是「不同」而非「更好」，就保留旧契约，直到证据支持切换。</p>
+
+  <h2><span class="letter">G.</span>退役一个契约<span class="en">Deprecating a Contract</span></h2>
+  <p>契约应当被有意识地退役：标记版本为弃用、把新流量路由给继任者、保留旧版本用于重放历史回执。</p>
+  <p>被弃用的契约对审计仍然重要。如果一次事故引用了 <code>receipt@version</code>，系统必须能重建那个版本在决策时刻的含义。</p>
+
+  <h2><span class="letter">H.</span>为变化而设计<span class="en">Designing for Change</span></h2>
+  <p>用户、工具、语言与模型都会变化。<strong>持久的工程表面是执行框架</strong>：类型化契约、版本化状态、校准阈值、记录在案的回执、确定性恢复。这一层牢固时，模型变化是一次实验，而不是一次重写。</p>
+
+  <div class="pager">
+    <a href="page07.html"><span class="dir">← 上一页</span>Ⅵ · 并行问题与状态边界</a>
+    <a class="next" href="page09.html"><span class="dir">下一页 →</span>Ⅷ · 智能体与多智能体模式</a>
+  </div>
+</div>
+<script src="nav.js"></script>
+</body>
+</html>

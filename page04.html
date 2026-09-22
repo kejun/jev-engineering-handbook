@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ⅲ · 决策契约即代码 · Jev 工程中文手册</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="page">
+  <div class="running-head">
+    <span>2026 Jev 工程实践工作手册 · 第三章</span>
+    <span>第 4 页 / 共 12 页 · <a href="index.html">返回目录</a></span>
+  </div>
+
+  <div class="chapter-head">
+    <div class="sec-no">SECTION Ⅲ</div>
+    <h1>决策契约即代码</h1>
+    <div class="h1-en">Decision Contracts as Code</div>
+    <span class="kicker">Contract Engineering · 契约工程</span>
+  </div>
+
+  <div class="trans-note">原版式注：双栏页，阅读顺序为左栏 → 右栏；章节字母按栏编号，本页出现两个 D 节，保留原编号。</div>
+
+  <h2><span class="letter">A.</span>问题是程序的一部分<span class="en">Questions Are Part of the Program</span></h2>
+  <p>一个生产级的 Jev 问题，就是一份<strong>决策契约</strong>（decision contract）。它定义：哪些状态字段可见、指令是什么含义、存在哪些结果、哪条逃逸路径是安全的、置信度如何解读、哪些动作可以随之发生，以及哪个契约版本产生了这个结果。把问题当成随手一写的提示词，等于扔掉类型化判断的核心优势。</p>
+  <p>内部标识符不是指令。一个名为 <code>safe_to_publish</code> 的字段对应用代码有用，却不会教会模型「安全」的含义。可操作的定义必须出现在指令与判据里；否则系统中就存在一条对开发者可见、对模型输入却缺席的语义规则。</p>
+
+  <div class="code-wrap">
+    <div class="code-head">代码 4-1 · 弱问题 vs 强问题（原文保留英文）</div>
+    <pre class="code"><span class="cm"># weak: label in code, meaning left to the model</span>
+<span class="st">"safe_to_publish"</span>
+
+<span class="cm"># strong: operational definition in the instructions</span>
+<span class="st">"Publishing is safe when every claim has a source,</span>
+<span class="st"> no credential appears, and no user is identified."</span></pre>
+    <div class="caption">弱：标签只存在于代码里，含义丢给模型去猜。强：可操作的定义写进指令——「当每个论断都有来源、没有出现任何凭证、没有识别到任何用户时，发布才是安全的。」</div>
+  </div>
+
+  <h2><span class="letter">B.</span>契约字段<span class="en">Contract Fields</span></h2>
+  <p>最小契约包含：状态 schema、指令、选项描述或量表、回退结果、置信度阈值、后果等级、允许动作、升级路径、模型版本与契约版本。契约应当<strong>无需阅读整个应用</strong>就能被评审。</p>
+  <p>「允许动作」字段尤其重要：它防止一个分类结果悄悄膨胀成权限。契约可以允许内部路由，同时禁止任何外部副作用。核验最终动作没有越过这个边界，仍是执行框架的职责。</p>
+
+  <h2><span class="letter">C.</span>契约版本化<span class="en">Contract Versioning</span></h2>
+  <p>选项、用户、工具与语言都会变化。一次语义修订就能改变生产行为，哪怕应用代码一行未动。把决策契约单独版本化，变更才可以被评审、用历史样本重新评估、灰度发布，并回滚。</p>
+
+  <h2><span class="letter">D.</span>像审查代码一样审查契约<span class="en">Review the Contract Like Code</span></h2>
+  <p>契约评审应确认：每个状态字段都是必需的；每个结果都可区分；每个开放菜单都有逃逸出口；每个置信度区间都映射到明确路由。评审者还应确认「允许动作」比模型的判断更窄，而精确约束仍留在代码里。</p>
+  <p>判据（criteria）的修订值得回归测试：在上一版本的标注样本上重跑，检查各类别准确率与校准，并要求对行为变化做出解释。更短的提示词并不自动等于更安全、更易维护的契约。</p>
+
+  <h2><span class="letter">D.</span>决策回执<span class="en">The Decision Receipt</span></h2>
+  <p>每个生产决策都应产出一份<strong>回执</strong>（receipt）。回执把判断与当时存在的状态、策略绑定起来，是审计、校准、事故复盘以及跨契约版本比较的最小单元。</p>
+
+  <div class="tbl-wrap">
+    <table class="paper">
+      <thead><tr><th>回执字段</th><th>用途</th></tr></thead>
+      <tbody>
+        <tr><td><code>contract version</code> 契约版本</td><td>标识语义程序</td></tr>
+        <tr><td><code>state reference</code> 状态引用</td><td>关联被评估的证据快照</td></tr>
+        <tr><td><code>full distribution</code> 完整分布</td><td>保留不确定性，而不只是胜者</td></tr>
+        <tr><td><code>selected threshold</code> 所选阈值</td><td>解释所处运行区间</td></tr>
+        <tr><td><code>consequence class</code> 后果等级</td><td>解释为何允许某条路由</td></tr>
+        <tr><td><code>route</code> 路由</td><td>记录 automate、improve 或 human</td></tr>
+        <tr><td><code>resulting action</code> 最终动作</td><td>把判断与执行连接起来</td></tr>
+      </tbody>
+    </table>
+    <div class="caption"><b>表 Ⅲ</b>　没有回执的标签难以评估或审计。<br><span style="color:var(--ink-faint);font-size:11px;">Table III. A label without a receipt is hard to evaluate or audit.</span></div>
+  </div>
+
+  <h2><span class="letter">E.</span>契约生命周期<span class="en">Contract Lifecycle</span></h2>
+  <p>生命周期分四步。其一，定义状态与结果；其二，在不可变快照上评估契约；其三，让结果经过后果感知阈值与确定性策略路由；其四，记录回执与最终动作。任何一步都不应藏进另一步。</p>
+  <p>把「评估」与「路由」分开，同一份分布就能服务不同策略：内部队列可以在较低阈值上自动化，公开声明则要求更高阈值；不可逆动作可以在任何置信度下都要求人工审查。语义判断是可复用的，权限策略是场景专属的。</p>
+
+  <h2><span class="letter">F.</span>测试契约<span class="en">Testing Contracts</span></h2>
+  <p>契约测试应覆盖：正常情况、含糊情况、证据缺失、对抗性措辞、过期选项，以及「没有一个选项合适」的样例。测试不仅要评估所选答案，还要评估置信度是否随证据质量单调变化。只在简单样例上准确的契约，还没有准备好去控制一个分支。</p>
+
+  <div class="code-wrap">
+    <div class="code-head">代码 4-2 · 契约版本演进示例（原文保留英文）</div>
+    <pre class="code">router<span class="kw">@1</span>  <span class="cm">broad options</span>
+router<span class="kw">@2</span>  <span class="cm">adds none-of-the-above</span>
+router<span class="kw">@3</span>  <span class="cm">separates billing from account access</span>
+router<span class="kw">@4</span>  <span class="cm">consequence-specific thresholds</span></pre>
+    <div class="caption">版本演进：@1 宽泛选项 → @2 增加「以上都不是」逃逸出口 → @3 把账单类与账户访问类分开 → @4 按后果等级设置专属阈值。</div>
+  </div>
+
+  <h2><span class="letter">G.</span>事故中的回执<span class="en">Receipts During Incidents</span></h2>
+  <p>事故期间，回执应能回答：模型看到了什么、哪个契约解读了它、概率如何分布、哪个阈值被触发、应用了哪条确定性策略、随后执行了什么动作。缺了这些环节，团队只能看到失败，却无法定位被破坏的边界。</p>
+  <p>回执还支持<strong>反事实评估</strong>：新的契约版本可以在历史状态快照上重放，而不必重复原来的副作用。当目标是「更安全的路由」而非「仅仅是不同的标签」时，这种对比必不可少。</p>
+
+  <div class="pager">
+    <a href="page03.html"><span class="dir">← 上一页</span>Ⅱ · Choice、Score 与 Noul</a>
+    <a class="next" href="page05.html"><span class="dir">下一页 →</span>Ⅳ · 状态包与证据</a>
+  </div>
+</div>
+<script src="nav.js"></script>
+</body>
+</html>

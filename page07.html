@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ⅵ · 并行问题与状态边界 · Jev 工程中文手册</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="page">
+  <div class="running-head">
+    <span>2026 Jev 工程实践工作手册 · 第六章</span>
+    <span>第 7 页 / 共 12 页 · <a href="index.html">返回目录</a></span>
+  </div>
+
+  <div class="chapter-head">
+    <div class="sec-no">SECTION Ⅵ</div>
+    <h1>并行问题与状态边界</h1>
+    <div class="h1-en">Parallel Questions and State Boundaries</div>
+    <span class="kicker">State Engineering · 状态工程</span>
+  </div>
+
+  <div class="trans-note">原版式注：双栏页，阅读顺序为左栏 → 右栏；章节字母按栏编号，本页出现两个 C 节，保留原编号。</div>
+
+  <h2><span class="letter">A.</span>为什么并行很难<span class="en">Why Parallelism Is Hard</span></h2>
+  <p>并行不只是同时发起多个模型调用。两个智能体共享同一个工作器池、预算或文件系统时，并不因为提示词不同就相互独立。扩展之前，执行框架必须分类：每个问题读什么、写什么状态。</p>
+  <p>确定性问题是最好并行的——结果由代码拥有，模型调用彼此不纠缠。语义问题需要证据与后果分析。有副作用的问题需要租约、预算与回滚。</p>
+  <p>危险的模式是<strong>乐观并行</strong>：先跑多条投机路线，再试图调和它们产生的效果。这把一个调度问题变成了分布式一致性问题。除非效果幂等或被隔离，否则更安全的做法是：<strong>并行做评估，串行做执行</strong>。</p>
+
+  <h2><span class="letter">B.</span>状态边界就是契约边界<span class="en">The State Boundary Is the Contract Boundary</span></h2>
+  <p>每个并行 Jev 问题都应声明它的<strong>状态切片</strong>（state slice）。切片定义可以读哪些字段、可以写哪些输出、可以锁哪些资源。两个写入重叠状态的问题，没有协调者就不应并发运行。</p>
+  <p>状态切片应当成为决策回执的一部分。这样在故障之后，你才能说出每条分支用了哪个投影，以及陈旧数据或丢失更新是否破坏了结果。</p>
+  <p>快照有版本时，只读并行是安全的；写入则需要所有权。只做分类的问题可以扇出；会改变外部状态的问题需要更窄的并发预算。</p>
+
+  <div class="tbl-wrap">
+    <table class="paper">
+      <thead><tr><th>状态字段</th><th>并行规则</th></tr></thead>
+      <tbody>
+        <tr><td>只读快照</td><td>可安全扇出</td></tr>
+        <tr><td>实时工具状态</td><td>串行化或加租约</td></tr>
+        <tr><td>共享预算</td><td>原子化预留</td></tr>
+        <tr><td>产物存储</td><td>以唯一 ID 追加</td></tr>
+        <tr><td>副作用队列</td><td>同一时间一个所有者</td></tr>
+      </tbody>
+    </table>
+    <div class="caption"><b>表 Ⅵ</b>　并行安全来自状态规则，而非提示词的独立性。<br><span style="color:var(--ink-faint);font-size:11px;">Table VI. Parallel safety comes from state rules, not prompt independence.</span></div>
+  </div>
+
+  <h2><span class="letter">C.</span>共享状态<span class="en">Shared State</span></h2>
+  <p>共享预算、配额与外部凭据值得特别注意。两条并行路线各自看都合理，合计却可能突破速率限制、成本上限或用户的容忍度。<strong>预留必须原子化；超支应当让一条分支失败，而不是把两条都弄坏。</strong></p>
+  <p>产物存储同样是共享状态。并行写入者需要唯一标识符、带版本的对象或追加式日志。「最后写入者获胜」的规则会悄悄掩盖那些产出了有价值证据的分支。</p>
+
+  <h2><span class="letter">C.</span>共享状态（续）<span class="en">Shared State</span></h2>
+  <p>共享的工作器池会把看起来独立的问题耦合起来。一条路线长时间占用工具会话时，其他路线可能在它后面排队，耗尽同一个并发预算。<strong>容量隔离</strong>让一条坏分支的爆炸半径可控。</p>
+
+  <h2><span class="letter">D.</span>独立子问题<span class="en">Independent Subquestions</span></h2>
+  <p>独立子问题的状态切片不相交、副作用不相交、没有顺序约束。例如：对三份互不相关的文档分别分类，可以扇出；先总结一份文档、再翻译那份总结，则不行。</p>
+  <p>独立性必须从<strong>状态访问</strong>证明，而不是从问题的表面措辞。两个「关于同一用户」的问题看起来独立，却可能都在写同一份档案。</p>
+
+  <div class="code-wrap">
+    <div class="code-head">代码 7-1 · 工作器租约（原文保留英文）</div>
+    <pre class="code">workers<span class="kw">@2</span>  <span class="cm">two worker leases</span></pre>
+    <div class="caption">两个工作器租约——并行分支各自持有独立的容量预算。</div>
+  </div>
+
+  <h2><span class="letter">E.</span>依赖路线<span class="en">Dependent Routes</span></h2>
+  <p>依赖路线需要排序或协调者。选项取决于前一次分类的检索问题必须等待。当依赖是<strong>语义的</strong>而非机械的时候，把这一对问题当作一个复合契约处理，中间设置检查点。</p>
+  <p>投机执行仍然有用：两个分支都评估，但只执行胜者。败者的副作用必须被抑制或保持幂等，且两次评估都记入回执，供校准分析使用。</p>
+
+  <h2><span class="letter">F.</span>测试并行安全<span class="en">Testing Parallel Safety</span></h2>
+  <p>并发测试应当包含：交错写入、预算耗尽、一条分支半途失败、部分效果之后的重试。顺序运行分支的测试证明的是逻辑，不是并行安全。</p>
+  <p>维护一个小的<strong>敌意调度</strong>库：以打乱的完成顺序和强制争用运行同一组问题。你要找的是非确定性的数据损坏，而不仅仅是慢吞吐。</p>
+
+  <div class="pager">
+    <a href="page06.html"><span class="dir">← 上一页</span>Ⅴ · 置信度、后果与校准</a>
+    <a class="next" href="page08.html"><span class="dir">下一页 →</span>Ⅶ · 执行框架设计与故障处理</a>
+  </div>
+</div>
+<script src="nav.js"></script>
+</body>
+</html>
