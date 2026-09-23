@@ -1,4 +1,6 @@
 // 共享导航：侧边栏 + 移动端开关
+// 修复：insertAdjacentHTML 会自动闭合未闭合标签，导致页面内容落在 .layout 之外、
+// 顶部出现整屏空白。改为真实 DOM 操作：把 body 原有内容整体移入 .main。
 const SECTIONS = [
   ["index.html",  "目录",  "CONTENTS", ""],
   ["page01.html", "封面",  "COVER", ""],
@@ -19,20 +21,36 @@ const SECTIONS = [
   const links = SECTIONS.map(([f, zh, , no]) =>
     `<a href="${f}" class="${f === here ? "active" : ""}"><span class="no">${no || "·"}</span><span>${zh}</span></a>`
   ).join("");
-  document.body.insertAdjacentHTML("afterbegin", `
-    <button id="sidebar-toggle" aria-label="目录">☰</button>
-    <div class="layout">
-    <aside class="sidebar">
-      <div class="brand">
-        <div class="zh">面向生产智能体的 Jev 工程</div>
-        <div class="en">Jev Engineering · 2026 中文手册</div>
-      </div>
-      <nav>${links}</nav>
-    </aside>
-    <div class="main">`);
-  document.body.insertAdjacentHTML("beforeend", `</div></div>`);
-  document.getElementById("sidebar-toggle").addEventListener("click", () =>
+
+  // 1. 收集 body 原有内容（页面正文）
+  const content = Array.from(document.body.childNodes);
+
+  // 2. 构造导航骨架
+  const toggle = document.createElement("button");
+  toggle.id = "sidebar-toggle";
+  toggle.setAttribute("aria-label", "目录");
+  toggle.textContent = "☰";
+
+  const layout = document.createElement("div");
+  layout.className = "layout";
+  layout.innerHTML =
+    `<aside class="sidebar">` +
+    `<div class="brand">` +
+    `<div class="zh">面向生产智能体的 Jev 工程</div>` +
+    `<div class="en">Jev Engineering · 2026 中文手册</div>` +
+    `</div><nav>${links}</nav></aside>` +
+    `<div class="main"></div>`;
+
+  const main = layout.querySelector(".main");
+
+  // 3. 把原有内容移入 .main，再挂载骨架
+  content.forEach((n) => main.appendChild(n));
+  document.body.appendChild(toggle);
+  document.body.appendChild(layout);
+
+  // 4. 交互
+  toggle.addEventListener("click", () =>
     document.body.classList.toggle("nav-open"));
-  document.querySelectorAll(".sidebar a").forEach(a =>
+  document.querySelectorAll(".sidebar a").forEach((a) =>
     a.addEventListener("click", () => document.body.classList.remove("nav-open")));
 })();
